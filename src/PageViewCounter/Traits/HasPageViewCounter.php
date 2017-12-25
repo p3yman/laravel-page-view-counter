@@ -3,6 +3,7 @@
 namespace CyrildeWit\PageViewCounter\Traits;
 
 use Request;
+use CyrildeWit\PageViewCounter\PageViewManager;
 use CyrildeWit\PageViewCounter\Helpers\SessionHistory;
 use CyrildeWit\PageViewCounter\Helpers\DateTransformer;
 
@@ -15,6 +16,8 @@ use CyrildeWit\PageViewCounter\Helpers\DateTransformer;
  */
 trait HasPageViewCounter
 {
+    protected $pageViewManager;
+
     /**
      * The SessionHistory helper instance.
      *
@@ -28,8 +31,9 @@ trait HasPageViewCounter
      * @param  array  $attributes
      * @return void
      */
-    public function __construct(array $attributes = [])
+    public function __construct(array $attributes = [], PageViewManager $pageViewManager)
     {
+        $this->pageViewManager = $pageViewManager;
         $this->sessionHistoryInstance = new SessionHistory();
 
         parent::__construct($attributes);
@@ -49,48 +53,13 @@ trait HasPageViewCounter
     }
 
     /**
-     * Retrieve page views based upon the given options.
-     *
-     * @param  \Carbon\Carbon|null  $sinceDate
-     * @param  \Carbon\Carbon|null  $uptoDate
-     * @param  bool  $unique  Should the page views be unique.
-     * @return int|string
-     */
-    public function retrievePageViews($sinceDate = null, $uptoDate = null, bool $unique = false)
-    {
-        // Create new Query Builder instance of views relationship
-        $query = $this->views();
-
-        // Apply the following if the since date is given
-        if ($sinceDate) {
-            $query->where('created_at', '>=', $sinceDate);
-        }
-
-        // Apply the following if the upto date is given
-        if ($uptoDate) {
-            $query->where('created_at', '=<', $sinceDate);
-        }
-
-        // Apply the following if page views should be unique
-        if ($unique) {
-            $query->select('ip_address')->groupBy('ip_address');
-        }
-
-        // If the unique option is false then just use the SQL count method,
-        // otherwise get the results and count them
-        $countedPageViews = ! $unique ? $query->count() : $query->get()->count();
-
-        return $countedPageViews;
-    }
-
-    /**
      * Get the total number of page views.
      *
      * @return int
      */
     public function getPageViews()
     {
-        return $this->retrievePageViews();
+        return $pageViewManager->getPageViewsBy($this);
     }
 
     /**
@@ -101,9 +70,7 @@ trait HasPageViewCounter
      */
     public function getPageViewsFrom($sinceDate)
     {
-        $sinceDate = DateTransformer::transform($sinceDate);
-
-        return $this->retrievePageViews($sinceDate);
+        return $pageViewManager->getPageViewsBy($this, $sinceDate);
     }
 
     /**
@@ -114,9 +81,7 @@ trait HasPageViewCounter
      */
     public function getPageViewsBefore($uptoDate)
     {
-        $uptoDate = DateTransformer::transform($uptoDate);
-
-        return $this->retrievePageViews(null, $uptoDate);
+        return $pageViewManager->getPageViewsBy($this, null, $uptoDate);
     }
 
     /**
@@ -128,10 +93,7 @@ trait HasPageViewCounter
      */
     public function getPageViewsBetween($sinceDate, $uptoDate)
     {
-        $sinceDate = DateTransformer::transform($sinceDate);
-        $uptoDate = DateTransformer::transform($uptoDate);
-
-        return $this->retrievePageViews($sinceDate, $uptoDate);
+        return $pageViewManager->getPageViewsBy($this, $sinceDate, $uptoDate);
     }
 
     /**
@@ -141,7 +103,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViews()
     {
-        return $this->retrievePageViews(null, null, true);
+        return $pageViewManager->getPageViewsBy($this, null, null, true);
     }
 
     /**
@@ -152,9 +114,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViewsFrom($sinceDate)
     {
-        $sinceDate = DateTransformer::transform($sinceDate);
-
-        return $this->retrievePageViews($sinceDate, null, true);
+        return $pageViewManager->getPageViewsBy($this, $sinceDate, null, true);
     }
 
     /**
@@ -165,9 +125,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViewsBefore($uptoDate)
     {
-        $uptoDate = DateTransformer::transform($uptoDate);
-
-        return $this->retrievePageViews(null, $uptoDate, true);
+        return $pageViewManager->getPageViewsBy($this, null, $uptoDate, true);
     }
 
     /**
@@ -179,10 +137,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViewsBetween($sinceDate, $uptoDate)
     {
-        $sinceDate = DateTransformer::transform($sinceDate);
-        $uptoDate = DateTransformer::transform($uptoDate);
-
-        return $this->retrievePageViews($sinceDate, $uptoDate, true);
+        return $pageViewManager->getPageViewsBy($this, $sinceDate, $uptoDate, true);
     }
 
     /**
