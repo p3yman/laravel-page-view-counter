@@ -17,7 +17,7 @@ class PageView extends Model implements PageViewContract
     /**
      * Constructor function of the PageVisit model.
      *
-     * @param array $attributes
+     * @param  array $attributes
      * @return void
      */
     public function __construct(array $attributes = [])
