@@ -4,8 +4,6 @@ namespace CyrildeWit\PageViewCounter\Traits;
 
 
 use CyrildeWit\PageViewCounter\PageViewManager;
-use CyrildeWit\PageViewCounter\Helpers\SessionHistory;
-use CyrildeWit\PageViewCounter\Helpers\DateTransformer;
 
 /**
  * Trait HasPageViewCounter for Eloquent models.
@@ -16,6 +14,11 @@ use CyrildeWit\PageViewCounter\Helpers\DateTransformer;
  */
 trait HasPageViewCounter
 {
+    /**
+     * The PageViewManager instance.
+     *
+     * @var \CyrildeWit\PageViewCounter\PageViewManager
+     */
     protected $pageViewManager;
 
     /**
