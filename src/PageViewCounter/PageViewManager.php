@@ -98,7 +98,7 @@ class PageViewManager
      * @param  \Carbon\Carbon|string  $expiryDate
      * @return bool
      */
-    public function addPageViewThatExpiresAt($expiryDate)
+    public function addPageViewThatExpiresAt($model, $expiryDate)
     {
         // Transform the date
         $expiryDate = ! is_null($expiryDate) ? $this->dateTransformer->transform($expiryDate) : null;
