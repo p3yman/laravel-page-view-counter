@@ -10,7 +10,7 @@ class DateTransformer
      * @param  \Carbon\Carbon|string  $value
      * @return \Carbon\Carbon
      */
-    public static function transform($value)
+    public function transform($value)
     {
         $transformers = config('page-view-counter.date-transformers');
 
