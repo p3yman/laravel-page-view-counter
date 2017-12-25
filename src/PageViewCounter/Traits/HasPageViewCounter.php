@@ -2,7 +2,7 @@
 
 namespace CyrildeWit\PageViewCounter\Traits;
 
-use Request;
+
 use CyrildeWit\PageViewCounter\PageViewManager;
 use CyrildeWit\PageViewCounter\Helpers\SessionHistory;
 use CyrildeWit\PageViewCounter\Helpers\DateTransformer;
@@ -19,22 +19,14 @@ trait HasPageViewCounter
     protected $pageViewManager;
 
     /**
-     * The SessionHistory helper instance.
-     *
-     * @var \CyrildeWit\PageViewCounter\Helpers\SessionHistory
-     */
-    protected $sessionHistoryInstance;
-
-    /**
      * Create a new Eloquent model instance.
      *
      * @param  array  $attributes
      * @return void
      */
-    public function __construct(array $attributes = [], PageViewManager $pageViewManager)
+    public function __construct(array $attributes = [])
     {
-        $this->pageViewManager = $pageViewManager;
-        $this->sessionHistoryInstance = new SessionHistory();
+        $this->pageViewManager = new PageViewManager;
 
         parent::__construct($attributes);
     }
@@ -59,7 +51,7 @@ trait HasPageViewCounter
      */
     public function getPageViews()
     {
-        return $pageViewManager->getPageViewsBy($this);
+        return $this->pageViewManager->getPageViewsBy($this);
     }
 
     /**
@@ -70,7 +62,7 @@ trait HasPageViewCounter
      */
     public function getPageViewsFrom($sinceDate)
     {
-        return $pageViewManager->getPageViewsBy($this, $sinceDate);
+        return $this->pageViewManager->getPageViewsBy($this, $sinceDate);
     }
 
     /**
@@ -81,7 +73,7 @@ trait HasPageViewCounter
      */
     public function getPageViewsBefore($uptoDate)
     {
-        return $pageViewManager->getPageViewsBy($this, null, $uptoDate);
+        return $this->pageViewManager->getPageViewsBy($this, null, $uptoDate);
     }
 
     /**
@@ -93,7 +85,7 @@ trait HasPageViewCounter
      */
     public function getPageViewsBetween($sinceDate, $uptoDate)
     {
-        return $pageViewManager->getPageViewsBy($this, $sinceDate, $uptoDate);
+        return $this->pageViewManager->getPageViewsBy($this, $sinceDate, $uptoDate);
     }
 
     /**
@@ -103,7 +95,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViews()
     {
-        return $pageViewManager->getPageViewsBy($this, null, null, true);
+        return $this->pageViewManager->getPageViewsBy($this, null, null, true);
     }
 
     /**
@@ -114,7 +106,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViewsFrom($sinceDate)
     {
-        return $pageViewManager->getPageViewsBy($this, $sinceDate, null, true);
+        return $this->pageViewManager->getPageViewsBy($this, $sinceDate, null, true);
     }
 
     /**
@@ -125,7 +117,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViewsBefore($uptoDate)
     {
-        return $pageViewManager->getPageViewsBy($this, null, $uptoDate, true);
+        return $this->pageViewManager->getPageViewsBy($this, null, $uptoDate, true);
     }
 
     /**
@@ -137,7 +129,7 @@ trait HasPageViewCounter
      */
     public function getUniquePageViewsBetween($sinceDate, $uptoDate)
     {
-        return $pageViewManager->getPageViewsBy($this, $sinceDate, $uptoDate, true);
+        return $this->pageViewManager->getPageViewsBy($this, $sinceDate, $uptoDate, true);
     }
 
     /**
@@ -147,15 +139,7 @@ trait HasPageViewCounter
      */
     public function addPageView()
     {
-        $viewClass = config('page-view-counter.page_view_model');
-
-        $newView = new $viewClass();
-        $newView->visitable_id = $this->id;
-        $newView->visitable_type = get_class($this);
-        $newView->ip_address = Request::ip();
-        $this->views()->save($newView);
-
-        return $newView;
+        return $this->pageViewManager->addPageView($this);
     }
 
     /**
@@ -166,14 +150,6 @@ trait HasPageViewCounter
      */
     public function addPageViewThatExpiresAt($expiryDate)
     {
-        $expiryDate = DateTransformer::transform($expiryDate);
-
-        if ($this->sessionHistoryInstance->addToSession($this, $expiryDate)) {
-            $this->addPageView();
-
-            return true;
-        }
-
-        return false;
+        return $this->pageViewManager->addPageViewThatExpiresAt($this, $expiryDate);
     }
 }

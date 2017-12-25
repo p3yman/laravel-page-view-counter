@@ -2,16 +2,36 @@
 
 namespace CyrildeWit\PageViewCounter;
 
+use Request;
 use Illuminate\Contracts\Cache\Repository;
+use CyrildeWit\PageViewCounter\Helpers\SessionHistory;
+use CyrildeWit\PageViewCounter\Helpers\DateTransformer;
 
 class PageViewManager
 {
     /**
+     * The DateTransformer helper instance.
      *
+     * @var \CyrildeWit\PageViewCounter\Helpers\DateTransformer
+     */
+    protected $dateTransformer;
+
+    /**
+     * The SessionHistory helper instance.
+     *
+     * @var \CyrildeWit\PageViewCounter\Helpers\SessionHistory
+     */
+    protected $sessionHistory;
+
+    /**
+     * Create a new PageViewManager instance.
+     *
+     * @return void
      */
     public function __construct()
     {
-        //
+        $this->dateTransformer = new DateTransformer;
+        $this->sessionHistory = new SessionHistory;
     }
 
     /**
@@ -25,6 +45,10 @@ class PageViewManager
      */
     public function getPageViewsBy($model, $sinceDate = null, $uptoDate = null, bool $unique = false)
     {
+        // Transform the dates
+        $sinceDate = ! is_null($sinceDate) ? $this->dateTransformer->transform($sinceDate) : null;
+        $uptoDate = ! is_null($uptoDate) ? $this->dateTransformer->transform($uptoDate) : null;
+
         // Create new Query Builder instance of views relationship
         $query = $model->views();
 
@@ -48,5 +72,43 @@ class PageViewManager
         $countedPageViews = ! $unique ? $query->count() : $query->get()->count();
 
         return $countedPageViews;
+    }
+
+    /**
+     * Store a new page view and return an instance of it.
+     *
+     * @return \CyrildeWit\PageViewCounter\Contracts\PageView
+     */
+    public function addPageView($model)
+    {
+        $viewClass = config('page-view-counter.page_view_model');
+
+        $newPageView = new $viewClass();
+        $newPageView->visitable_id = $model->id;
+        $newPageView->visitable_type = get_class($model);
+        $newPageView->ip_address = Request::ip();
+        $model->views()->save($newPageView);
+
+        return $newPageView;
+    }
+
+    /**
+     * Store a new page view and store it into the session with an expiry date.
+     *
+     * @param  \Carbon\Carbon|string  $expiryDate
+     * @return bool
+     */
+    public function addPageViewThatExpiresAt($expiryDate)
+    {
+        // Transform the date
+        $expiryDate = ! is_null($expiryDate) ? $this->dateTransformer->transform($expiryDate) : null;
+
+        if ($this->sessionHistory->addToSession($this, $expiryDate)) {
+            $this->addPageView();
+
+            return true;
+        }
+
+        return false;
     }
 }
