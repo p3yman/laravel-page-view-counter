@@ -24,6 +24,13 @@ class PageViewManager
     protected $sessionHistory;
 
     /**
+     * The cache repository instance.
+     *
+     * @var \Illuminate\Cache\Repository
+     */
+    protected $cache;
+
+    /**
      * Create a new PageViewManager instance.
      *
      * @return void
@@ -32,6 +39,7 @@ class PageViewManager
     {
         $this->dateTransformer = new DateTransformer;
         $this->sessionHistory = new SessionHistory;
+        $this->cache = app(Repository::class);
     }
 
     /**
@@ -90,6 +98,8 @@ class PageViewManager
         $model->views()->save($newPageView);
 
         return $newPageView;
+
+
     }
 
     /**
