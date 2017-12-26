@@ -37,4 +37,20 @@ return [
         // '14d' => Carbon::now()->subWeeks(2),
     ],
 
+    /*
+     * Here you may define the cache store that should be used to store
+     * requests. This can be the name of any store that is
+     * configured in app/config/cache.php
+     */
+    'cache_store' => env('RESPONSE_CACHE_DRIVER', 'file'),
+
+    /*
+     * If the cache driver you configured supports tags, you may specify a tag name
+     * here. All responses will be tagged. When clearing the responsecache only
+     * items with that tag will be flushed.
+     *
+     * You may use a string are an array here.
+     */
+    'cache_tag' => '',
+
 ];
