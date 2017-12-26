@@ -3,6 +3,7 @@
 namespace CyrildeWit\PageViewCounter;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Contracts\Cache\Repository;
 use CyrildeWit\PageViewCounter\Contracts\PageView as PageViewContract;
 
 /**
@@ -37,6 +38,18 @@ class PageViewCounterServiceProvider extends ServiceProvider
 
         // Register the required model bindings
         $this->registerModelBindings();
+
+        $this->app->when(PageViewManager::class)
+            ->needs(Repository::class)
+            ->give(function(): Repository {
+                $repository = $this->app['cache']->store(config('page-view-counter.cache_store'));
+
+                if (! empty(config('page-view-counter.cache_tag'))) {
+                    return $repository->tags(config('page-view-counter.cache_tag'));
+                }
+
+                return $repository;
+            });
     }
 
     /**
